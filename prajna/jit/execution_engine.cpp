@@ -91,7 +91,7 @@ void ExecutionEngine::addIRModule(std::shared_ptr<ir::Module> ir_module) {
 
 #ifdef PRAJNA_WITH_GPU
     for (auto [ir_target, ir_sub_module] : ir_module->modules) {
-        if (ir_sub_module == ptr) continue;
+        if (not ir_sub_module) continue;
 
         // @todo 没有核函数,则无需编译, 可优化为没有核函数调用则无需编译, 在transform优化,
         // 先不做处理
@@ -110,7 +110,7 @@ void ExecutionEngine::addIRModule(std::shared_ptr<ir::Module> ir_module) {
                              .string();
         std::error_code err_code;
         llvm::raw_fd_ostream llvm_fs(file_base + ".ll", err_code);
-        ir_sub_module->llvm_module->print(llvm_fs, ptr);
+        ir_sub_module->llvm_module->print(llvm_fs, nullptr);
         llvm_fs.close();
         PRAJNA_VERIFY(
             std::system(("llc " + file_base + ".ll" + " -o " + file_base + ".ptx").c_str()) == 0);

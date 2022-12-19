@@ -18,7 +18,7 @@ func multiProcessorsCount(device: i64)->i64{
     return count.toi64();
 }
 
-func launchKernel(kernel_function_pointer: i8*, gridDim: i64[3], blockDim: i64[3], kernel_params: i8**)->i64{
+func launchKernel(kernel_function_pointer: i8*, gridDim: Array<i64, 3>, blockDim: Array<i64, 3>, kernel_params: i8**)->i64{
     var re = cuda::cuLaunchKernel(kernel_function_pointer, gridDim[0].tou32(), gridDim[1].tou32(), gridDim[2].tou32(), blockDim[0].tou32(), blockDim[1].tou32(), blockDim[2].tou32(), 0u32, nullptr<i8>::create(), kernel_params, cast<i8**>(nullptr<i8>::create()));
     // "launch re: ".print();
     // re.tostr().print();
@@ -138,21 +138,21 @@ func __grid_dim_z()->u32;
 func __warp_size()->u32;
 
 @target("nvptx")
-func threadIndex()->i64[3] {
+func threadIndex()->Array<i64, 3> {
     return [__thread_idx_x().toi64(), __thread_idx_y().toi64(), __thread_idx_z().toi64()];
 }
 
 @target("nvptx")
-func blockDim()->i64[3] {
+func blockDim()->Array<i64, 3> {
     return [__block_dim_x().toi64(), __block_dim_y().toi64(), __block_dim_z().toi64()];
 }
 
 @target("nvptx")
-func blockIndex()->i64[3] {
+func blockIndex()->Array<i64, 3> {
     return [__block_idx_x().toi64(), __block_idx_y().toi64(), __block_idx_z().toi64()];
 }
 
 @target("nvptx")
-func gridDim()->i64[3] {
+func gridDim()->Array<i64, 3> {
     return [__grid_dim_x().toi64(), __grid_dim_y().toi64(), __grid_dim_z().toi64()];
 }
