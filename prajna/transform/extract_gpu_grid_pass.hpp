@@ -335,12 +335,12 @@ inline std::shared_ptr<ir::Module> extractGpuFor(std::shared_ptr<ir::Module> ir_
         auto ir_multi_process_count = ir_builder->create<ir::Call>(
             ir_multi_processor_count_function, std::vector<std::shared_ptr<ir::Value>>{ir_zero});
 
-        auto ir_grid_dim = ir_builder->getDim3Variable();
+        auto ir_grid_dim = ir_builder->create<ir::LocalVariable>(ir_builder->getDim3Type());
         ir_builder->setDim3(ir_grid_dim, 0, ir_multi_process_count);
         ir_builder->setDim3(ir_grid_dim, 1, ir_builder->getIndexConstant(1));
         ir_builder->setDim3(ir_grid_dim, 2, ir_builder->getIndexConstant(1));
 
-        auto ir_block_dim = ir_builder->getDim3Variable();
+        auto ir_block_dim = ir_builder->create<ir::LocalVariable>(ir_builder->getDim3Type());
         ir_builder->setDim3(ir_block_dim, 0, ir_max_thread_per_block);
         ir_builder->setDim3(ir_block_dim, 1, ir_builder->getIndexConstant(1));
         ir_builder->setDim3(ir_block_dim, 2, ir_builder->getIndexConstant(1));

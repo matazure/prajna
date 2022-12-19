@@ -4,6 +4,7 @@
 #include "prajna/lowering/builtin.hpp"
 #include "prajna/lowering/expression_lowering_visitor.hpp"
 #include "prajna/lowering/symbol_table.hpp"
+#include "prajna/lowering/template.hpp"
 
 namespace prajna::lowering {
 
@@ -21,38 +22,48 @@ class IrBuilder {
 
     IrBuilder() : IrBuilder(nullptr, nullptr) {}
 
-    inline std::shared_ptr<ir::Type> getIndexType() { return ir::global_context.index_type; }
+    std::shared_ptr<ir::Type> getIndexType() { return ir::global_context.index_type; }
 
-    inline std::shared_ptr<ir::ConstantInt> getIndexConstant(int64_t value) {
-        auto ir_value = ir::ConstantInt::create(getIndexType(), value);
+    std::shared_ptr<ir::ConstantInt> getIndexConstant(int64_t value) {
+        auto ir_value = this->create<ir::ConstantInt>(getIndexType(), value);
         this->insert(ir_value);
         return ir_value;
     }
 
-    inline std::shared_ptr<ir::ArrayType> getDim3Type() {
-        auto ir_dim3_type = ir::ArrayType::create(getIndexType(), 3);
+    std::shared_ptr<ir::StructType> getDim3Type() {
+        PRAJNA_ASSERT(symbol_table);
+
+        std::list<Symbol> symbol_template_arguments;
+        symbol_template_arguments.push_back(this->getIndexType());
+        symbol_template_arguments.push_back(this->getIndexConstant(3));
+
+        auto symbol_array = this->symbol_table->get("Array");
+        PRAJNA_VERIFY(symbol_array.type() == typeid(std::shared_ptr<TemplateStruct>),
+                      "system libs is bad");
+        auto array_template = symbolGet<TemplateStruct>(symbol_array);
+        auto ir_dim3_type =
+            array_template->getStructInstance(symbol_template_arguments, this->module);
         return ir_dim3_type;
     }
 
-    inline std::shared_ptr<ir::ConstantArray> getDim3Constant(int64_t v0, int64_t v1, int64_t v2) {
-        auto ir_dim3_constant = ir::ConstantArray::create(
-            getDim3Type(), {getIndexConstant(v0), getIndexConstant(v1), getIndexConstant(v2)});
-        return ir_dim3_constant;
-    }
+    std::shared_ptr<ir::WriteProperty> setDim3(std::shared_ptr<ir::Value> ir_dim3, int64_t index,
+                                               std::shared_ptr<ir::Value> ir_value) {
+        PRAJNA_ASSERT(this->isArrayType(ir_dim3->type));
+        auto ir_index_property = ir_dim3->type->properties["["];
+        PRAJNA_VERIFY(ir_index_property, "Array index property is missing");
 
-    inline std::shared_ptr<ir::LocalVariable> getDim3Variable() {
-        return this->create<ir::LocalVariable>(getDim3Type());
-    }
-
-    inline void setDim3(std::shared_ptr<ir::Value> ir_dim3, int64_t index,
-                        std::shared_ptr<ir::Value> ir_value) {
-        auto ir_index = getIndexConstant(index);
-        auto ir_index_array = create<ir::IndexArray>(ir_dim3, ir_index);
-        create<ir::WriteVariableLiked>(ir_value, ir_index_array);
+        auto ir_dim3_variable_liked = this->variableLikedNormalize(ir_dim3);
+        auto ir_array_tmp_this_pointer =
+            this->create<ir::GetAddressOfVariableLiked>(ir_dim3_variable_liked);
+        auto ir_index = this->getIndexConstant(index);
+        auto ir_access_property =
+            this->create<ir::AccessProperty>(ir_array_tmp_this_pointer, ir_index_property);
+        ir_access_property->arguments({ir_index});
+        return this->create<ir::WriteProperty>(ir_value, ir_access_property);
     }
 
     template <typename _Value, typename... _Args>
-    std::shared_ptr<_Value> create(_Args &&...__args) {
+    std::shared_ptr<_Value> create(_Args &&... __args) {
         auto ir_value = _Value::create(std::forward<_Args>(__args)...);
         static_assert(std::is_base_of<ir::Value, _Value>::value);
         PRAJNA_ASSERT(current_block);

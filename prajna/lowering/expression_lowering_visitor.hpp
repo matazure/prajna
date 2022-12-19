@@ -668,11 +668,6 @@ class ExpressionLoweringVisitor {
     // }
 
     std::shared_ptr<ir::Value> applyArray(std::vector<ast::Expression> ast_array_values) {
-        auto symbol_array = ir_builder->symbol_table->get("Array");
-        PRAJNA_VERIFY(symbol_array.type() == typeid(std::shared_ptr<TemplateStruct>),
-                      "system libs is bad");
-        auto array_template = symbolGet<TemplateStruct>(symbol_array);
-
         // 获取数组类型
         PRAJNA_ASSERT(ast_array_values.size() > 0);
         auto ir_first_value = this->applyOperand(ast_array_values.front());
@@ -680,6 +675,11 @@ class ExpressionLoweringVisitor {
         std::list<Symbol> symbol_template_arguments;
         symbol_template_arguments.push_back(ir_value_type);
         symbol_template_arguments.push_back(ir_builder->getIndexConstant(ast_array_values.size()));
+
+        auto symbol_array = ir_builder->symbol_table->get("Array");
+        PRAJNA_VERIFY(symbol_array.type() == typeid(std::shared_ptr<TemplateStruct>),
+                      "system libs is bad");
+        auto array_template = symbolGet<TemplateStruct>(symbol_array);
         auto ir_array_type =
             array_template->getStructInstance(symbol_template_arguments, ir_builder->module);
 
@@ -687,12 +687,11 @@ class ExpressionLoweringVisitor {
         auto ir_index_property = ir_array_type->properties["["];
         PRAJNA_VERIFY(ir_index_property, "Array index property is missing");
         for (size_t i = 0; i < ast_array_values.size(); ++i) {
-            auto ir_index = ir_builder->getIndexConstant(i);
-            // auto ir_index_array = ir_builder->create<ir::IndexArray>(ir_array_tmp, ir_idx);
             auto ir_value = this->applyOperand(ast_array_values[i]);
             if (ir_value->type != ir_value_type) {
                 logger->error("the array element type are not the same", ast_array_values[i]);
             }
+            auto ir_index = ir_builder->getIndexConstant(i);
             auto ir_array_tmp_this_pointer =
                 ir_builder->create<ir::GetAddressOfVariableLiked>(ir_array_tmp);
             auto ir_access_property = ir_builder->create<ir::AccessProperty>(
