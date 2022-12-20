@@ -653,6 +653,15 @@ std::shared_ptr<ir::Module> llvmCodegen(std::shared_ptr<ir::Module> ir_module,
 
     for (auto [ir_target, ir_sub_module] : ir_module->modules) {
         if (ir_sub_module == nullptr) continue;
+
+        // 如果没有核函数, 则不生成. 因为不会被使用, gpu会把所用的的ir都拷贝过去
+        if (std::none_of(RANGE(ir_sub_module->functions),
+                         [](std::shared_ptr<ir::Function> ir_function) {
+                             return ir_function->function_type->annotations.count("kernel");
+                         })) {
+            continue;
+        }
+
         llvmCodegen(ir_sub_module, ir_target);
     }
 

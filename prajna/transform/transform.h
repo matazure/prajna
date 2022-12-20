@@ -269,6 +269,11 @@ inline std::shared_ptr<ir::Module> cloneExternalNvptxValue(std::shared_ptr<ir::M
     ir_all_functions.merge(ir_nvptx_module->functions);
     ir_nvptx_module->functions = ir_all_functions;
 
+    std::cout << "functions---------------------\n";
+    for (auto ir_function : ir_nvptx_module->functions) {
+        std::cout << ir_function->fullname << "\n";
+    }
+
     return ir_module;
 }
 
