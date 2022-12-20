@@ -317,6 +317,7 @@ inline std::shared_ptr<ir::Module> extractGpuFor(std::shared_ptr<ir::Module> ir_
         auto ir_builder = std::make_shared<lowering::IrBuilder>();
         ir_builder->current_block = ir_gpu_parent_block;
         ir_builder->inserter_iterator = iter_gpu_for;
+        ir_builder->symbol_table = ir_module->symbol_table;
 
         //
         auto symbol_table_gpu =
