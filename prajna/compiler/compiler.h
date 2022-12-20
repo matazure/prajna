@@ -48,6 +48,7 @@ class Compiler {
 
    public:
     std::shared_ptr<jit::ExecutionEngine> jit_engine;
+    size_t compile_error_count = 0;
 };
 
 }  // namespace compiler

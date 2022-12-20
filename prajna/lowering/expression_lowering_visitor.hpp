@@ -637,8 +637,11 @@ class ExpressionLoweringVisitor {
                     }
                     return ir_type->constructor;
                 },
-                [](std::shared_ptr<ir::ConstantInt> ir_constant_int) -> std::shared_ptr<ir::Value> {
-                    return ir_constant_int;
+                [ir_builder = this->ir_builder](std::shared_ptr<ir::ConstantInt> ir_constant_int)
+                    -> std::shared_ptr<ir::Value> {
+                    // 需要在block里插入, 这才符合后面IR转换生成的规则
+                    PRAJNA_ASSERT(ir_constant_int->type == ir_builder->getIndexType());
+                    return ir_builder->getIndexConstant(ir_constant_int->value);
                 },
                 [=](auto x) {
                     logger->error(fmt::format("use invalid symbol as a value"),

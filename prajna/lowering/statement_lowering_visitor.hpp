@@ -261,7 +261,7 @@ class StatementLoweringVisitor {
             }
 
         } else {
-            ir_function->function_type->annotations.insert({"declare", {}});
+            ir_function->is_declaration = true;
         }
 
         ir_builder->ir_return_type = nullptr;

@@ -236,43 +236,23 @@ inline std::shared_ptr<ir::Module> cloneExternalNvptxValue(std::shared_ptr<ir::M
     }
 
     auto ir_nvptx_module = ir_module->modules[ir::Target::nvptx];
-    std::list<std::shared_ptr<ir::Function>> ir_function_seeds(ir_nvptx_module->functions.rbegin(),
-                                                               ir_nvptx_module->functions.rend());
-    std::list<std::shared_ptr<ir::Function>> ir_external_functions;
-    for (auto iter_function = ir_function_seeds.begin(); iter_function != ir_function_seeds.end();
-         ++iter_function) {
-        auto ir_function = *iter_function;
-        auto ir_instructions = utility::getValuesInFunction<ir::Instruction>(ir_function);
-        for (auto ir_instruction : ir_instructions) {
-            for (size_t i = 0; i < ir_instruction->operandSize(); ++i) {
-                if (auto ir_function_type = ir_instruction->operand(i)->getFunctionType()) {
-                    auto ir_function_used = ir_function_type->function;
-                    if (std::count(RANGE(ir_function_seeds), ir_function_used) == 0) {
-                        ir_function_seeds.push_back(ir_function_used);
-                        ir_external_functions.push_back(ir_function_used);
-                    }
-                }
-            }
-        }
-    }
 
-    ir_external_functions.reverse();
-    auto ir_cloner = std::make_shared<ir::Cloner>();
-    std::transform(RANGE(ir_external_functions), ir_external_functions.begin(),
-                   [=](std::shared_ptr<ir::Function> ir_function) {
-                       auto ir_new_function = cast<ir::Function>(ir_function->clone(ir_cloner));
-                       ir_new_function->parent_module = ir_nvptx_module;
-                       return ir_new_function;
-                   });
+    std::list<std::shared_ptr<ir::Function>> ir_kernel_functions_list;
+    std::copy_if(RANGE(ir_nvptx_module->functions), std::back_inserter(ir_kernel_functions_list),
+                 [](std::shared_ptr<ir::Function> ir_function) {
+                     return ir_function->function_type->annotations.count("kernel");
+                 });
 
-    auto ir_all_functions = ir_external_functions;
-    ir_all_functions.merge(ir_nvptx_module->functions);
-    ir_nvptx_module->functions = ir_all_functions;
+    PRAJNA_ASSERT(ir_kernel_functions_list.size() <= 1,
+                  "两个以上后面重构, 每个核函数可能会有单独的module");
 
-    std::cout << "functions---------------------\n";
-    for (auto ir_function : ir_nvptx_module->functions) {
-        std::cout << ir_function->fullname << "\n";
-    }
+    if (ir_kernel_functions_list.empty()) return ir_module;
+
+    auto ir_kernel_function = ir_kernel_functions_list.front();
+    auto function_cloner = ir::FunctionCloner::create(ir_nvptx_module);
+    ir_kernel_function->clone(function_cloner);
+
+    ir_nvptx_module->functions = function_cloner->functions;
 
     return ir_module;
 }
@@ -319,6 +299,31 @@ inline std::shared_ptr<ir::Module> removeValuesAfterReturn(std::shared_ptr<ir::M
     return ir_module;
 }
 
+inline std::shared_ptr<ir::Module> declareExternalFunction(std::shared_ptr<ir::Module> ir_module) {
+    utility::each<ir::Call>(ir_module, [=](std::shared_ptr<ir::Call> ir_call) {
+        if (auto ir_callee = cast<ir::Function>(ir_call->function())) {
+            if (ir_callee->parent_module != ir_module) {
+                // 不会重复添加, 因为会置换所有的操作数
+                auto ir_function = ir::Function::create(ir_callee->function_type);
+                ir_function->fullname = ir_callee->fullname;
+                ir_function->name = ir_callee->name;
+                for (auto ir_argument_type : ir_function->function_type->argument_types) {
+                    ir_function->arguments.push_back(ir::Argument::create(ir_argument_type));
+                }
+                ir_function->parent_module = ir_module;
+                ir_module->functions.push_front(ir_function);
+
+                auto instruction_with_index_list_copy = ir_callee->instruction_with_index_list;
+                for (auto [ir_instruction, op_idx] : instruction_with_index_list_copy) {
+                    ir_instruction->operand(ir_function, op_idx);
+                }
+            }
+        }
+    });
+
+    return ir_module;
+}
+
 inline std::shared_ptr<ir::Module> transform(std::shared_ptr<ir::Module> ir_module) {
     ir_module = convertPropertyToFunctionCall(ir_module);
     ir_module = insertInitializeAndCopyAndDestroyCallback(ir_module);
@@ -335,7 +340,7 @@ inline std::shared_ptr<ir::Module> transform(std::shared_ptr<ir::Module> ir_modu
     ir_module = convertGlobalVariableToPointer(ir_module);
 
     // 在sperateModule后面
-    ir_module = makeCompatiableWithLlvm(ir_module);
+    ir_module = declareExternalFunction(ir_module);
     return ir_module;
 }
 }  // namespace prajna::transform

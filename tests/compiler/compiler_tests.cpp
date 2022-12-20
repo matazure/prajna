@@ -9,16 +9,6 @@
 
 using namespace prajna;
 
-class CompilerSourceTests : public testing::TestWithParam<std::string> {};
-
-TEST_P(CompilerSourceTests, TestFromDirectory) {
-    auto compiler = std::make_shared<compiler::Compiler>();
-    std::string prajna_source_path = GetParam();
-    compiler->compileBuiltinSourceFiles("prajna/builtin_sources");
-    compiler->compileFile(".", prajna_source_path);
-    compiler->runTestFunctions();
-}
-
 struct PrintFileName {
     template <class ParamType>
     std::string operator()(const testing::TestParamInfo<ParamType>& info) const {
@@ -26,14 +16,47 @@ struct PrintFileName {
     }
 };
 
-class CompilerScriptTests : public testing::TestWithParam<std::string> {};
+class CompilerSourceTests : public testing::TestWithParam<std::string> {};
+TEST_P(CompilerSourceTests, TestSourceFromDirectory) {
+    auto compiler = std::make_shared<compiler::Compiler>();
+    std::string prajna_source_path = GetParam();
+    compiler->compileBuiltinSourceFiles("prajna/builtin_sources");
+    compiler->compileFile(".", prajna_source_path);
+    compiler->runTestFunctions();
+    ASSERT_EQ(0, compiler->compile_error_count);
+}
 
-TEST_P(CompilerScriptTests, TestFromDirectory) {
+class CompilerScriptTests : public testing::TestWithParam<std::string> {};
+TEST_P(CompilerScriptTests, TestScriptFromDirectory) {
     auto compiler = std::make_shared<compiler::Compiler>();
     compiler->compileBuiltinSourceFiles("prajna/builtin_sources");
-
     std::string prajna_script_path = GetParam();
+    std::ifstream ifs(prajna_script_path);
+    while (ifs.good()) {
+        std::string code;
+        std::getline(ifs, code);
+        // 修复//注释的问题
+        code.append("\n");
+        compiler->compileCommandLine(code);
+        std::cout << std::endl;
+    }
+    ASSERT_EQ(0, compiler->compile_error_count);
+}
 
+class CompilerErrorSourceTests : public testing::TestWithParam<std::string> {};
+TEST_P(CompilerErrorSourceTests, TestSourceFromDirectory) {
+    auto compiler = std::make_shared<compiler::Compiler>();
+    std::string prajna_source_path = GetParam();
+    compiler->compileBuiltinSourceFiles("prajna/builtin_sources");
+    compiler->compileFile(".", prajna_source_path);
+    compiler->runTestFunctions();
+}
+
+class CompilerErrorScriptTests : public testing::TestWithParam<std::string> {};
+TEST_P(CompilerErrorScriptTests, TestScriptFromDirectory) {
+    auto compiler = std::make_shared<compiler::Compiler>();
+    compiler->compileBuiltinSourceFiles("prajna/builtin_sources");
+    std::string prajna_script_path = GetParam();
     std::ifstream ifs(prajna_script_path);
     while (ifs.good()) {
         std::string code;
@@ -55,13 +78,13 @@ INSTANTIATE_TEST_SUITE_P(
     testing::ValuesIn(prajna::tests::getFiles("tests/compiler/prajna_sources")), PrintFileName());
 
 INSTANTIATE_TEST_SUITE_P(
-    CompilerErrorScriptTestsInstance, CompilerScriptTests,
+    CompilerErrorScriptTestsInstance, CompilerErrorScriptTests,
     testing::ValuesIn(prajna::tests::getFiles("tests/compiler/prajna_error_scripts")),
     PrintFileName());
 
 // 会遍历整个文件夹里的文件
 INSTANTIATE_TEST_SUITE_P(
-    CompilerErrorSourceTestsInstance, CompilerSourceTests,
+    CompilerErrorSourceTestsInstance, CompilerErrorSourceTests,
     testing::ValuesIn(prajna::tests::getFiles("tests/compiler/prajna_error_sources")),
     PrintFileName());
 
@@ -79,13 +102,13 @@ INSTANTIATE_TEST_SUITE_P(
     PrintFileName());
 
 INSTANTIATE_TEST_SUITE_P(
-    CompilerErrorScriptTestsGpuInstance, CompilerScriptTests,
+    CompilerErrorScriptTestsGpuInstance, CompilerErrorScriptTests,
     testing::ValuesIn(prajna::tests::getFiles("tests/compiler/prajna_error_gpu_scripts")),
     PrintFileName());
 
 // 会遍历整个文件夹里的文件
 INSTANTIATE_TEST_SUITE_P(
-    CompilerErrorSourceTestsGpuInstance, CompilerSourceTests,
+    CompilerErrorSourceTestsGpuInstance, CompilerErrorSourceTests,
     testing::ValuesIn(prajna::tests::getFiles("tests/compiler/prajna_error_gpu_sources")),
     PrintFileName());
 

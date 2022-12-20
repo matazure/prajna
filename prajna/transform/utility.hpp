@@ -54,6 +54,16 @@ inline void eachValue(std::shared_ptr<ir::Module> ir_module,
 }
 
 template <typename _Value>
+inline void each(std::shared_ptr<ir::Module> ir_module,
+                 std::function<void(std::shared_ptr<_Value>)> ir_callback) {
+    eachValue(ir_module, [=](auto ir_e) {
+        if (auto ir_target = cast<_Value>(ir_e)) {
+            ir_callback(ir_target);
+        }
+    });
+}
+
+template <typename _Value>
 inline std::list<std::shared_ptr<_Value>> getValuesInFunction(
     std::shared_ptr<ir::Function> ir_function) {
     std::list<std::shared_ptr<_Value>> ir_values;

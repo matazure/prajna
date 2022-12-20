@@ -39,38 +39,44 @@ void Compiler::compileBuiltinSourceFiles(std::string builtin_sources_dir) {
 std::shared_ptr<ir::Module> Compiler::compileCode(
     std::string code, std::shared_ptr<lowering::SymbolTable> symbol_table, std::string file_name,
     bool is_interpreter) {
-    auto logger = Logger::create(code);
-    auto ast = prajna::parser::parse(code, file_name, logger);
-    PRAJNA_ASSERT(ast);
-    auto ir_lowering_module = prajna::lowering::lower(ast, symbol_table, logger, is_interpreter);
-    ir_lowering_module->name = file_name;
-    ir_lowering_module->fullname = ir_lowering_module->name;
-    for (auto [ir_target, ir_sub_module] : ir_lowering_module->modules) {
-        if (ir_sub_module == nullptr) continue;
-        ir_sub_module->name = ir_lowering_module->name + "_" + ir::targetToString(ir_target);
-        ir_sub_module->fullname = ir_sub_module->name;
-    }
-    auto ir_ssa_module = prajna::transform::transform(ir_lowering_module);
-    auto ir_codegen_module = prajna::codegen::llvmCodegen(ir_ssa_module, ir::Target::host);
-    jit_engine->addIRModule(ir_codegen_module);
+    try {
+        auto logger = Logger::create(code);
+        auto ast = prajna::parser::parse(code, file_name, logger);
+        PRAJNA_ASSERT(ast);
+        auto ir_lowering_module =
+            prajna::lowering::lower(ast, symbol_table, logger, is_interpreter);
+        ir_lowering_module->name = file_name;
+        ir_lowering_module->fullname = ir_lowering_module->name;
+        for (auto [ir_target, ir_sub_module] : ir_lowering_module->modules) {
+            if (ir_sub_module == nullptr) continue;
+            ir_sub_module->name = ir_lowering_module->name + "_" + ir::targetToString(ir_target);
+            ir_sub_module->fullname = ir_sub_module->name;
+        }
+        auto ir_ssa_module = prajna::transform::transform(ir_lowering_module);
+        auto ir_codegen_module = prajna::codegen::llvmCodegen(ir_ssa_module, ir::Target::host);
+        jit_engine->addIRModule(ir_codegen_module);
 
-    return ir_lowering_module;
+        return ir_lowering_module;
+    } catch (CompileError &) {
+        ++compile_error_count;
+        return nullptr;
+    }
 }
 
 void Compiler::compileCommandLine(std::string command_line_code) {
-    try {
-        auto ir_module = this->compileCode(command_line_code, _symbol_table, "", true);
-        jit_engine->catchRuntimeError();
-        // @note 会有一次输入多个句子的情况
-        for (auto ir_function : ir_module->functions) {
-            if (ir_function->function_type->annotations.count("\\command")) {
-                auto fun_fullname = ir_function->fullname;
-                auto fun_ptr = reinterpret_cast<void (*)(void)>(jit_engine->getValue(fun_fullname));
-                fun_ptr();
-            }
+    static int command_id = 0;
+    auto ir_module = this->compileCode(command_line_code, _symbol_table,
+                                       ":cmd" + std::to_string(command_id++), true);
+    if (not ir_module) return;
+
+    jit_engine->catchRuntimeError();
+    // @note 会有一次输入多个句子的情况
+    for (auto ir_function : ir_module->functions) {
+        if (ir_function->function_type->annotations.count("\\command")) {
+            auto fun_fullname = ir_function->fullname;
+            auto fun_ptr = reinterpret_cast<void (*)(void)>(jit_engine->getValue(fun_fullname));
+            fun_ptr();
         }
-    } catch (CompileError &) {
-        // Do  None
     }
 }
 
@@ -89,19 +95,14 @@ void Compiler::runTestFunctions() {
 }
 
 void Compiler::compileFile(std::string prajna_source_dir, std::string prajna_source_file) {
-    try {
-        auto prajna_source_full_path =
-            fs::current_path() / fs::path(prajna_source_dir) / fs::path(prajna_source_file);
-        std::ifstream ifs(prajna_source_full_path);
-        PRAJNA_ASSERT(ifs.good());
-        std::string code((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
+    auto prajna_source_full_path =
+        fs::current_path() / fs::path(prajna_source_dir) / fs::path(prajna_source_file);
+    std::ifstream ifs(prajna_source_full_path);
+    PRAJNA_ASSERT(ifs.good());
+    std::string code((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
 
-        auto current_symbol_table =
-            lowering::createSymbolTableTree(_symbol_table, prajna_source_file);
-        this->compileCode(code, current_symbol_table, prajna_source_full_path, false);
-    } catch (CompileError &) {
-        // Do none
-    }
+    auto current_symbol_table = lowering::createSymbolTableTree(_symbol_table, prajna_source_file);
+    this->compileCode(code, current_symbol_table, prajna_source_full_path, false);
 }
 
 }  // namespace prajna::compiler

@@ -1,7 +1,6 @@
 #include "prajna/transform/transform.h"
 
 #include "prajna/transform/extract_gpu_grid_pass.hpp"
-#include "prajna/transform/make_compatiable_with_llvm_pass.hpp"
 #include "prajna/transform/transform_to_ssa_pass.hpp"
 
 namespace prajna::transform {
@@ -35,14 +34,6 @@ std::shared_ptr<ir::Module> convertVariableToPointer(std::shared_ptr<ir::Module>
         convertVariableToPointer(ir_sub_module);
     }
 
-    return ir_module;
-}
-
-std::shared_ptr<ir::Module> makeCompatiableWithLlvm(std::shared_ptr<ir::Module> ir_module) {
-    MakeCompatiableWithLlvmPass make_compatiable_with_llvm_pass;
-    for (auto ir_function : ir_module->functions) {
-        make_compatiable_with_llvm_pass.runOnFunction(ir_function);
-    }
     return ir_module;
 }
 

@@ -1,4 +1,4 @@
 var a = 3;
-b = 4;
-c = a + b;
+var b = 4;
+var c = a + b;
 
