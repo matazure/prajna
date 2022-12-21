@@ -56,7 +56,7 @@ int main() {
         }
         code_line = std::string(RANGE(code_line_list));
         // ;可以重复, 不会导致错误. 插入到\n前面, 这样错误信息才正确
-        auto last_char = *std::prev(std::prev(code_line.end()));
+        auto last_char = *std::prev(code_line.end(), 2);
         if (code_line.size() >= 2 and not(last_char == ';' or last_char == '}')) {
             code_line.insert(std::prev(code_line.end()), ';');
         }

@@ -279,7 +279,7 @@ inline auto convertGpuForToKernelCall(std::shared_ptr<ir::For> ir_gpu_for, size_
         ir_builder->popBlock(ir_block);
 
         // 插入ir_gpu_for里的逻辑
-        auto ir_kernel_while = cast<ir::While>(ir_block->values.back());
+        auto ir_kernel_while = cast<ir::While>(*std::prev(ir_block->values.end(), 2));
         PRAJNA_ASSERT(ir_kernel_while);
         auto ir_kernel_while_loop_block =
             cast<ir::Block>(ir_kernel_while->loopBlock()->values.front());
@@ -295,8 +295,8 @@ inline auto convertGpuForToKernelCall(std::shared_ptr<ir::For> ir_gpu_for, size_
     ir_builder->create<ir::Return>(ir_builder->create<ir::VoidValue>());
 
     // @note 临时处理, 应该搞到外面才合理
-    FlatternBlockPass flattern_block_pass;
-    flattern_block_pass.runOnFunction(ir_kernel_function);
+    // FlatternBlockPass flattern_block_pass;
+    // flattern_block_pass.runOnFunction(ir_kernel_function);
 
     return std::make_tuple(ir_kernel_function, ir_captured_variables_list);
 }
