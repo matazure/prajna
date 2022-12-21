@@ -522,7 +522,7 @@ class LlvmCodegen {
             return;
         }
         if (auto ir_condition_branch = cast<ir::ConditionBranch>(ir_instruction)) {
-            // 需要处理, 因为true/falseBlock不会加入到其他Block里
+            // 需要处理, 因为true/falseBlock在ir_condition_branch的后面
             this->emitBlock(ir_condition_branch->trueBlock(), ir_target);
             this->emitBlock(ir_condition_branch->falseBlock(), ir_target);
             PRAJNA_ASSERT(ir_condition_branch->trueBlock()->llvm_value);

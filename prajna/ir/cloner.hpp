@@ -1,8 +1,8 @@
 #pragma once
 
 #include <list>
+#include <map>
 #include <memory>
-#include <unordered_map>
 
 // #include "prajna/ir/value.hpp"
 
@@ -25,7 +25,7 @@ class FunctionCloner {
 
     std::shared_ptr<ir::Module> module;
     std::list<std::shared_ptr<ir::Function>> functions;
-    std::unordered_map<std::shared_ptr<ir::Value>, std::shared_ptr<ir::Value>> value_dict;
+    std::map<std::shared_ptr<ir::Value>, std::shared_ptr<ir::Value>> value_dict;
 };
 
 }  // namespace prajna::ir

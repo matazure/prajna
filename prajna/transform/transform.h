@@ -33,51 +33,56 @@ std::shared_ptr<ir::Module> sperateModule(std::shared_ptr<ir::Module> ir_module)
 // auto create = [=](auto )
 inline std::shared_ptr<ir::Module> convertPropertyToFunctionCall(
     std::shared_ptr<ir::Module> ir_module) {
-    for (auto ir_function : ir_module->functions) {
-        auto ir_access_properties = utility::getValuesInFunction<ir::AccessProperty>(ir_function);
-        for (auto ir_access_property : ir_access_properties) {
-            auto ir_block = ir_access_property->parent_block;
-            lowering::IrBuilder ir_builder;
-            ir_builder.current_block = ir_block;
-            ir_builder.inserter_iterator = std::find(RANGE(ir_block->values), ir_access_property);
+    auto ir_access_properties = utility::getValuesInModule<ir::AccessProperty>(ir_module);
+    for (auto ir_access_property : ir_access_properties) {
+        auto ir_block = ir_access_property->parent_block;
+        lowering::IrBuilder ir_builder;
+        ir_builder.current_block = ir_block;
+        ir_builder.inserter_iterator = std::find(RANGE(ir_block->values), ir_access_property);
 
-            auto instructions_with_index_set_copy = ir_access_property->instruction_with_index_list;
+        auto instructions_with_index_set_copy = ir_access_property->instruction_with_index_list;
 
-            for (auto instruction_with_index : instructions_with_index_set_copy) {
-                auto ir_inst = instruction_with_index.instruction;
-                size_t op_idx = instruction_with_index.operand_index;
+        for (auto instruction_with_index : instructions_with_index_set_copy) {
+            auto ir_inst = instruction_with_index.instruction;
+            size_t op_idx = instruction_with_index.operand_index;
 
-                PRAJNA_ASSERT(not is<ir::GetAddressOfVariableLiked>(ir_inst));
+            PRAJNA_ASSERT(not is<ir::GetAddressOfVariableLiked>(ir_inst));
 
-                if (is<ir::WriteProperty>(ir_inst) && op_idx == 1) {
-                    auto ir_write_property = cast<ir::WriteProperty>(ir_inst);
-                    auto ir_arguments = ir_access_property->arguments();
-                    ir_arguments.insert(ir_arguments.begin(), ir_access_property->thisPointer());
-                    ir_arguments.push_back(ir_write_property->value());
-                    auto ir_setter_call = ir_builder.create<ir::Call>(
-                        ir_access_property->property->setter_function, ir_arguments);
-                    utility::removeFromParent(ir_write_property);
-                    ir_write_property->finalize();
-                } else {
-                    auto ir_arguments = ir_access_property->arguments();
-                    ir_arguments.insert(ir_arguments.begin(), ir_access_property->thisPointer());
-                    auto ir_getter_call = ir_builder.create<ir::Call>(
-                        ir_access_property->property->getter_function, ir_arguments);
-                    ir_inst->operand(ir_getter_call, op_idx);
-                }
-            }
-
-            if (instructions_with_index_set_copy.empty()) {
+            if (is<ir::WriteProperty>(ir_inst) && op_idx == 1) {
+                auto ir_write_property = cast<ir::WriteProperty>(ir_inst);
+                auto ir_arguments = ir_access_property->arguments();
+                ir_arguments.insert(ir_arguments.begin(), ir_access_property->thisPointer());
+                ir_arguments.push_back(ir_write_property->value());
+                auto ir_setter_call = ir_builder.create<ir::Call>(
+                    ir_access_property->property->setter_function, ir_arguments);
+                utility::removeFromParent(ir_write_property);
+                ir_write_property->finalize();
+            } else {
                 auto ir_arguments = ir_access_property->arguments();
                 ir_arguments.insert(ir_arguments.begin(), ir_access_property->thisPointer());
                 auto ir_getter_call = ir_builder.create<ir::Call>(
                     ir_access_property->property->getter_function, ir_arguments);
+                ir_inst->operand(ir_getter_call, op_idx);
             }
-
-            utility::removeFromParent(ir_access_property);
-            ir_access_property->finalize();
         }
+
+        if (instructions_with_index_set_copy.empty()) {
+            auto ir_arguments = ir_access_property->arguments();
+            ir_arguments.insert(ir_arguments.begin(), ir_access_property->thisPointer());
+            auto ir_getter_call = ir_builder.create<ir::Call>(
+                ir_access_property->property->getter_function, ir_arguments);
+        }
+
+        utility::removeFromParent(ir_access_property);
+        ir_access_property->finalize();
     }
+
+    for (auto [ir_target, ir_sub_module] : ir_module->modules) {
+        if (not ir_module) continue;
+
+        convertPropertyToFunctionCall(ir_sub_module);
+    }
+
     return ir_module;
 }
 
@@ -315,7 +320,9 @@ inline std::shared_ptr<ir::Module> declareExternalFunction(std::shared_ptr<ir::M
 
                 auto instruction_with_index_list_copy = ir_callee->instruction_with_index_list;
                 for (auto [ir_instruction, op_idx] : instruction_with_index_list_copy) {
-                    ir_instruction->operand(ir_function, op_idx);
+                    if (ir_instruction->getParentFunction()->parent_module == ir_module) {
+                        ir_instruction->operand(ir_function, op_idx);
+                    }
                 }
             }
         }
@@ -337,8 +344,8 @@ inline std::shared_ptr<ir::Module> transform(std::shared_ptr<ir::Module> ir_modu
     ir_module = sperateModule(ir_module);
     ir_module = cloneExternalNvptxValue(ir_module);
     ir_module = defineKernelFunctionAddress(ir_module);
+    ir_module = convertPropertyToFunctionCall(ir_module);
     ir_module = convertGlobalVariableToPointer(ir_module);
-
     // 在sperateModule后面
     ir_module = declareExternalFunction(ir_module);
     return ir_module;
