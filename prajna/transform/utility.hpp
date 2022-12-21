@@ -96,6 +96,7 @@ inline void replaceInBlock(std::shared_ptr<ir::Value> ir_org, std::shared_ptr<ir
     PRAJNA_ASSERT(ir_org->parent_block);
     auto ir_block = ir_org->parent_block;
     auto iter = std::find(ir_block->values.begin(), ir_block->values.end(), ir_org);
+    PRAJNA_ASSERT(iter != ir_block->values.end());
     ir_block->insert(iter, ir_new);
     ir_block->erase(iter);
 }

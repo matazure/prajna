@@ -116,36 +116,32 @@ inline bool flatternBlockImpl(std::shared_ptr<ir::Block> ir_block) {
             ir_builder->current_block = ir_block;
             ir_builder->inserter_iterator = iter;
 
-            auto ir_write_first =
-                ir_builder->create<ir::WriteVariableLiked>(ir_for->first(), ir_for->index());
+            // 创建用于记录迭代的变量,
+            auto ir_first_sub_one = ir_builder->callBinaryOperator(ir_for->first(), "-",
+                                                                   ir_builder->getIndexConstant(1));
+            auto ir_index_count = ir_builder->cloneValue(ir_first_sub_one);
 
             auto ir_label_condition_entry = ir_for->beforeLabel();
             auto ir_concat_jump = ir_builder->create<ir::JumpBranch>(ir_label_condition_entry);
             ir_block->insert(iter, ir_label_condition_entry);
             auto ir_label_loop = ir::Label::create();
-            ir_for->loopBlock()->pushFront(ir_label_loop);
             // insertCallMemmberFunction会插入ir_condition
+            auto ir_index_count_add_one = ir_builder->callBinaryOperator(
+                ir_index_count, "+", {ir_builder->getIndexConstant(1)});
+            ir_builder->create<ir::WriteVariableLiked>(ir_index_count_add_one, ir_index_count);
             auto ir_condition =
-                ir_builder->callBinaryOperator(ir_for->index(), "<", {ir_for->last()});
+                ir_builder->callBinaryOperator(ir_index_count, "<", {ir_for->last()});
             auto ir_label_after_loop = ir_for->afterLabel();
             auto ir_condition_branch = ir_builder->create<ir::ConditionBranch>(
                 ir_condition, ir_label_loop, ir_label_after_loop);
 
-            {
-                std::string code = "i = i + 1;";
-                auto logger = Logger::create(code);
-                auto ast = prajna::parser::parse(code, "//None", logger);
-                auto symbol_table = ir_block->getParentFunction()->parent_module->symbol_table;
-                auto statement_lowering_visitor =
-                    lowering::StatementLoweringVisitor::create(symbol_table, logger);
-                auto ir_builder = statement_lowering_visitor->ir_builder;
-                ir_builder->pushSymbolTable();
-                ir_builder->pushBlock(ir_for->loopBlock());
-                ir_builder->symbol_table->set(ir_for->index(), "i");
-                statement_lowering_visitor->apply(ast);
-                ir_builder->popSymbolTable();
-                ir_builder->popBlock(ir_for->loopBlock());
-            }
+            ir_builder->pushBlock(ir_for->loopBlock());
+            // 给ir_for->index()赋值
+            ir_builder->inserter_iterator = ir_builder->current_block->values.begin();
+            ir_builder->create<ir::WriteVariableLiked>(ir_index_count, ir_for->index());
+            // 需要在后面执行, 插入到最前面去
+            ir_for->loopBlock()->pushFront(ir_label_loop);
+            ir_builder->popBlock(ir_for->loopBlock());
 
             auto ir_jump_branch = ir::JumpBranch::create(ir_label_condition_entry);
             ir_for->loopBlock()->pushBack(ir_jump_branch);

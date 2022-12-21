@@ -410,7 +410,7 @@ class Block : public Value {
     }
 
     iterator erase(iterator iter) {
-        PRAJNA_ASSERT((*iter) && (*iter)->parent_block.get() == this);
+        PRAJNA_ASSERT((*iter) && (*iter)->parent_block == shared_from_this());
         (*iter)->parent_block = nullptr;
         return this->values.erase(iter);
     }

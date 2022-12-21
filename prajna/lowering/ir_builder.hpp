@@ -108,9 +108,10 @@ class IrBuilder {
         return this->create<ir::Call>(ir_member_function, ir_arguments);
     }
 
-    std::shared_ptr<ir::Call> callBinaryOperator(
-        std::shared_ptr<ir::Value> ir_object, std::string binary_operator,
-        std::vector<std::shared_ptr<ir::Value>> ir_arguments) {
+    std::shared_ptr<ir::Call> callBinaryOperator(std::shared_ptr<ir::Value> ir_object,
+                                                 std::string binary_operator,
+                                                 std::shared_ptr<ir::Value> ir_operand) {
+        std::vector<std::shared_ptr<ir::Value>> ir_arguments = {ir_operand};
         auto ir_variable_liked = this->variableLikedNormalize(ir_object);
         auto ir_this_pointer = this->create<ir::GetAddressOfVariableLiked>(ir_variable_liked);
         ir_arguments.insert(ir_arguments.begin(), ir_this_pointer);

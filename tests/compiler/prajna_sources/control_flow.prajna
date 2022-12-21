@@ -42,7 +42,7 @@ func testFor(){
             last = 0;
 
             // i的改变会影响循环, 后面看下如何修复
-            // i = i + 1;
+            i = i + 1;
         }
 
         testing::Assert(tmp == 4950);
