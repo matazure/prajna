@@ -442,7 +442,6 @@ class ConvertVariableToPointerPass : public FunctionPass {
 
     bool runOnFunction(std::shared_ptr<ir::Function> ir_function) override {
         bool changed = false;
-        // @warning 编译器可能存在bug, changed在前面会直接跳过后面函数的执行
         changed = this->insertValueToBlock(ir_function) || changed;
         changed = this->convertThisWrapperToDeferencePointer(ir_function) || changed;
         changed = this->convertVariableToDeferencePointer(ir_function) || changed;

@@ -8,6 +8,7 @@
 #include "prajna/lowering/statement_lowering_visitor.hpp"
 #include "prajna/parser/parse.h"
 #include "prajna/transform/extract_gpu_grid_pass.hpp"
+#include "prajna/transform/flattern_block.hpp"
 #include "prajna/transform/initializer_and_copy_destroy_callback.hpp"
 #include "prajna/transform/transform_pass.hpp"
 #include "prajna/transform/utility.hpp"
@@ -21,8 +22,6 @@ class Statements;
 }
 
 namespace prajna::transform {
-
-std::shared_ptr<ir::Module> flatternBlock(std::shared_ptr<ir::Module> ir_module);
 
 std::shared_ptr<ir::Module> convertVariableToPointer(std::shared_ptr<ir::Module> ir_module);
 
@@ -338,6 +337,7 @@ inline std::shared_ptr<ir::Module> transform(std::shared_ptr<ir::Module> ir_modu
     ir_module = removeValuesAfterReturn(ir_module);
     ir_module = extractGpuFor(ir_module);
     ir_module = convertKernelFunctionCallToKernelLaunch(ir_module);
+    ir_module = flatternBlock(ir_module);
     ir_module = convertPropertyToFunctionCall(ir_module);
     ir_module = convertKernelFunctionOperandToAddress(ir_module);
     ir_module = convertGlobalVariableToPointer(ir_module);

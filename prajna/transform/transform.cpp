@@ -5,21 +5,6 @@
 
 namespace prajna::transform {
 
-std::shared_ptr<ir::Module> flatternBlock(std::shared_ptr<ir::Module> ir_module) {
-    FlatternBlockPass flattern_block_pass;
-    for (auto ir_function : ir_module->functions) {
-        flattern_block_pass.runOnFunction(ir_function);
-    }
-
-    for (auto [ir_target, ir_sub_module] : ir_module->modules) {
-        if (not ir_sub_module) continue;
-
-        flatternBlock(ir_sub_module);
-    }
-
-    return ir_module;
-}
-
 std::shared_ptr<ir::Module> convertVariableToPointer(std::shared_ptr<ir::Module> ir_module) {
     PRAJNA_ASSERT(ir_module);
 
