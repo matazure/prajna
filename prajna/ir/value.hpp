@@ -1333,12 +1333,16 @@ class While : public Instruction {
    public:
     static std::shared_ptr<While> create(std::shared_ptr<Value> ir_condition,
                                          std::shared_ptr<Block> ir_condition_block,
-                                         std::shared_ptr<Block> ir_true_block) {
+                                         std::shared_ptr<Block> ir_true_block,
+                                         std::shared_ptr<Label> ir_before_label,
+                                         std::shared_ptr<Label> ir_after_label) {
         std::shared_ptr<While> self(new While);
-        self->operandResize(3);
+        self->operandResize(5);
         self->condition(ir_condition);
         self->conditionBlock(ir_condition_block);
         self->trueBlock(ir_true_block);
+        self->beforeLabel(ir_before_label);
+        self->afterLabel(ir_after_label);
         self->tag = "While";
         return self;
     }
@@ -1353,6 +1357,12 @@ class While : public Instruction {
 
     std::shared_ptr<Block> loopBlock() { return cast<Block>(this->operand(2)); }
     void trueBlock(std::shared_ptr<Block> ir_true_block) { this->operand(2, ir_true_block); }
+
+    std::shared_ptr<Label> beforeLabel() { return cast<Label>(this->operand(3)); }
+    void beforeLabel(std::shared_ptr<Label> ir_true_block) { this->operand(3, ir_true_block); }
+
+    std::shared_ptr<Label> afterLabel() { return cast<Label>(this->operand(4)); }
+    void afterLabel(std::shared_ptr<Label> ir_true_block) { this->operand(4, ir_true_block); }
 
     std::shared_ptr<Value> clone(std::shared_ptr<FunctionCloner> function_cloner) override {
         std::shared_ptr<While> ir_new(new While(*this));
@@ -1372,14 +1382,18 @@ class For : public Instruction {
     static std::shared_ptr<For> create(std::shared_ptr<LocalVariable> ir_index,
                                        std::shared_ptr<Value> ir_first,
                                        std::shared_ptr<Value> ir_last,
-                                       std::shared_ptr<Block> ir_loop_block) {
+                                       std::shared_ptr<Block> ir_loop_block,
+                                       std::shared_ptr<Label> ir_before_label,
+                                       std::shared_ptr<Label> ir_after_label) {
         // std::shared_ptr<For> self(new For);
         std::shared_ptr<For> self(new For);
-        self->operandResize(4);
+        self->operandResize(6);
         self->index(ir_index);
         self->first(ir_first);
         self->last(ir_last);
         self->loopBlock(ir_loop_block);
+        self->beforeLabel(ir_before_label);
+        self->afterLabel(ir_after_label);
         self->tag = "For";
         return self;
     }
@@ -1395,6 +1409,12 @@ class For : public Instruction {
 
     std::shared_ptr<Block> loopBlock() { return cast<Block>(this->operand(3)); }
     void loopBlock(std::shared_ptr<Block> ir_loop_block) { this->operand(3, ir_loop_block); }
+
+    std::shared_ptr<Label> beforeLabel() { return cast<Label>(this->operand(4)); }
+    void beforeLabel(std::shared_ptr<Label> ir_true_block) { this->operand(4, ir_true_block); }
+
+    std::shared_ptr<Label> afterLabel() { return cast<Label>(this->operand(5)); }
+    void afterLabel(std::shared_ptr<Label> ir_true_block) { this->operand(5, ir_true_block); }
 
     std::shared_ptr<Value> clone(std::shared_ptr<FunctionCloner> function_cloner) override {
         std::shared_ptr<For> ir_new(new For(*this));

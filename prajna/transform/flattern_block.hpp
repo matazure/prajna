@@ -18,10 +18,13 @@ inline bool flatternBlockImpl(std::shared_ptr<ir::Block> ir_block) {
     bool changed = false;
     for (auto iter = ir_block->values.begin(); iter != ir_block->values.end();) {
         if (auto ir_cur_block = cast<ir::Block>(*iter)) {
-            PRAJNA_ASSERT(!is<ir::Label>(ir_cur_block));
+            // Label也是Block的一种, 但其不能展开
+            if (is<ir::Label>(ir_cur_block)) {
+                ++iter;
+                continue;
+            }
 
             flatternBlockImpl(ir_cur_block);
-
             for (auto ir_value : ir_cur_block->values) {
                 ir_block->insert(iter, ir_value);
             }
@@ -70,13 +73,12 @@ inline bool flatternBlockImpl(std::shared_ptr<ir::Block> ir_block) {
 
             auto ir_label_loop = ir::Label::create();
             ir_while->loopBlock()->pushFront(ir_label_loop);
-            auto ir_label_after_loop = ir::Label::create();
+            // auto ir_label_after_loop = ir::Label::create();
             auto ir_condition_branch = ir::ConditionBranch::create(
-                ir_while->condition(), ir_label_loop, ir_label_after_loop);
+                ir_while->condition(), ir_label_loop, ir_while->afterLabel());
             ir_while->conditionBlock()->pushBack(ir_condition_branch);
 
-            auto ir_label_condition_entry = ir::Label::create();
-            ir_while->conditionBlock()->pushFront(ir_label_condition_entry);
+            auto ir_label_condition_entry = ir_while->beforeLabel();
             auto ir_jump_branch = ir::JumpBranch::create(ir_label_condition_entry);
             ir_while->loopBlock()->pushBack(ir_jump_branch);
 
@@ -89,7 +91,7 @@ inline bool flatternBlockImpl(std::shared_ptr<ir::Block> ir_block) {
             for (auto e : ir_while->loopBlock()->values) {
                 ir_block->insert(iter, e);
             }
-            ir_block->insert(iter, ir_label_after_loop);
+            // ir_block->insert(iter, ir_label_after_loop);
 
             iter = ir_block->values.erase(iter);
             // 会有循环依赖, 必须强制析构
@@ -117,7 +119,7 @@ inline bool flatternBlockImpl(std::shared_ptr<ir::Block> ir_block) {
             auto ir_write_first =
                 ir_builder->create<ir::WriteVariableLiked>(ir_for->first(), ir_for->index());
 
-            auto ir_label_condition_entry = ir::Label::create();
+            auto ir_label_condition_entry = ir_for->beforeLabel();
             auto ir_concat_jump = ir_builder->create<ir::JumpBranch>(ir_label_condition_entry);
             ir_block->insert(iter, ir_label_condition_entry);
             auto ir_label_loop = ir::Label::create();
@@ -125,7 +127,7 @@ inline bool flatternBlockImpl(std::shared_ptr<ir::Block> ir_block) {
             // insertCallMemmberFunction会插入ir_condition
             auto ir_condition =
                 ir_builder->callBinaryOeprator(ir_for->index(), "<", {ir_for->last()});
-            auto ir_label_after_loop = ir::Label::create();
+            auto ir_label_after_loop = ir_for->afterLabel();
             auto ir_condition_branch = ir_builder->create<ir::ConditionBranch>(
                 ir_condition, ir_label_loop, ir_label_after_loop);
 
@@ -150,7 +152,6 @@ inline bool flatternBlockImpl(std::shared_ptr<ir::Block> ir_block) {
             for (auto e : ir_for->loopBlock()->values) {
                 ir_block->insert(iter, e);
             }
-            ir_block->insert(iter, ir_label_after_loop);
             iter = ir_block->values.erase(iter);
 
             ir_for->loopBlock()->finalize();

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stack>
+
 #include "prajna/ir/ir.hpp"
 #include "prajna/lowering/builtin.hpp"
 #include "prajna/lowering/expression_lowering_visitor.hpp"
@@ -63,7 +65,7 @@ class IrBuilder {
     }
 
     template <typename _Value, typename... _Args>
-    std::shared_ptr<_Value> create(_Args &&... __args) {
+    std::shared_ptr<_Value> create(_Args &&...__args) {
         auto ir_value = _Value::create(std::forward<_Args>(__args)...);
         static_assert(std::is_base_of<ir::Value, _Value>::value);
         PRAJNA_ASSERT(current_block);
@@ -165,13 +167,16 @@ class IrBuilder {
 
    public:
     std::shared_ptr<SymbolTable> symbol_table = nullptr;
-    std::shared_ptr<ir::Block> current_block = nullptr;
     std::shared_ptr<ir::Function> current_function = nullptr;
     std::shared_ptr<ir::Module> module = nullptr;
+
     std::shared_ptr<ir::Type> return_type = nullptr;
 
-    ir::Block::iterator inserter_iterator;
+    std::stack<std::shared_ptr<ir::Label>> loop_after_label_stack;
+    std::stack<std::shared_ptr<ir::Label>> loop_before_label_stack;
 
+    std::shared_ptr<ir::Block> current_block = nullptr;
+    ir::Block::iterator inserter_iterator;
     std::function<void(std::shared_ptr<ir::Value>)> create_callback;
 };
 

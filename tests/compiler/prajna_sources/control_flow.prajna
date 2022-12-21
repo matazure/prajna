@@ -10,6 +10,12 @@ func testIfElse(a: bool)->i64 {
     return b;
 }
 
+func testWhileTmpe(){
+    while(true){
+
+    }
+}
+
 func testWhile(size: i64)->i64{
     var tmp = 0;
     var i = 0;
@@ -28,11 +34,41 @@ func testFor(){
     var last = 100;
     var tmp = 0;
 
-    for i in first to 100{
+    for i in first to last{
         tmp = tmp + i;
+
+        // 不影响循环
+        // first = 100;
+        // last = 0;
     }
 
-    testing::Assert(tmp == 5000);
+    testing::Assert(tmp == 4950);
+}
+
+func testBreak()->i64{
+    var i = 0;
+    while (i < 10){
+        i = i + 1;
+        if (i == 2){
+            break;
+        }
+    }
+
+    return i;
+}
+
+func testContinue()->i64{
+    var i = 0;
+    var j = 0;
+    while (i < 10){
+        i = i + 1;
+        if (i == 2){
+            continue;
+        }
+        j = j + 1;
+    }
+
+    return j;
 }
 
 @test
@@ -43,6 +79,11 @@ func testControlFlow(){
     testing::Assert(testWhile(0) == 0);
     testing::Assert(testWhile(5) == 6);
     testing::Assert(testWhile(10) == 20);
+
+    testing::Assert(testBreak() == 2);
+    testing::Assert(testContinue() == 9);
+
+    testFor();
 
     return;
 }

@@ -292,8 +292,9 @@ inline std::shared_ptr<ir::Module> defineKernelFunctionAddress(
 inline std::shared_ptr<ir::Module> removeValuesAfterReturn(std::shared_ptr<ir::Module> ir_module) {
     for (auto ir_function : ir_module->functions) {
         for (auto ir_block : ir_function->blocks) {
-            auto iter_return =
-                std::find_if(RANGE(ir_block->values), [](auto x) { return is<ir::Return>(x); });
+            auto iter_return = std::find_if(RANGE(ir_block->values), [](auto x) {
+                return is<ir::Return>(x) || is<ir::JumpBranch>(x) || is<ir::ConditionBranch>(x);
+            });
             if (iter_return != ir_block->values.end()) {
                 ir_block->values.erase(std::next(iter_return), ir_block->values.end());
             }
