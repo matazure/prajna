@@ -128,7 +128,7 @@ class FlatternBlockPass : public FunctionPass {
                 ir_for->loopBlock()->pushFront(ir_label_loop);
                 // insertCallMemmberFunction会插入ir_condition
                 auto ir_condition =
-                    ir_builder->callBinaryOeprator(ir_for->index(), "<", {ir_for->last()});
+                    ir_builder->callBinaryOperator(ir_for->index(), "<", {ir_for->last()});
                 auto ir_label_after_loop = ir::Label::create();
                 auto ir_condition_branch = ir_builder->create<ir::ConditionBranch>(
                     ir_condition, ir_label_loop, ir_label_after_loop);

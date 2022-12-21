@@ -32,6 +32,12 @@ class IrBuilder {
         return ir_value;
     }
 
+    std::shared_ptr<ir::LocalVariable> cloneValue(std::shared_ptr<ir::Value> ir_value) {
+        auto ir_local_variable = this->create<ir::LocalVariable>(ir_value->type);
+        this->create<ir::WriteVariableLiked>(ir_value, ir_local_variable);
+        return ir_local_variable;
+    }
+
     std::shared_ptr<ir::StructType> getDim3Type() {
         PRAJNA_ASSERT(symbol_table);
 
@@ -102,7 +108,7 @@ class IrBuilder {
         return this->create<ir::Call>(ir_member_function, ir_arguments);
     }
 
-    std::shared_ptr<ir::Call> callBinaryOeprator(
+    std::shared_ptr<ir::Call> callBinaryOperator(
         std::shared_ptr<ir::Value> ir_object, std::string binary_operator,
         std::vector<std::shared_ptr<ir::Value>> ir_arguments) {
         auto ir_variable_liked = this->variableLikedNormalize(ir_object);

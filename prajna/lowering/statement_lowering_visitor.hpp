@@ -359,9 +359,12 @@ class StatementLoweringVisitor {
         auto ir_loop_after = ir::Label::create();
         ir_builder->loop_after_label_stack.push(ir_loop_after);
 
+        // 这里使用了局部值拷贝的方式来模仿右值, 因为ir_first/last_value不会被改变
+        auto ir_first_value = ir_builder->cloneValue(ir_first);
+        auto ir_last_value = ir_builder->cloneValue(ir_last);
         auto ir_loop_block = ir::Block::create();
-        auto ir_for = ir_builder->create<ir::For>(ir_index, ir_first, ir_last, ir_loop_block,
-                                                  ir_loop_before, ir_loop_after);
+        auto ir_for = ir_builder->create<ir::For>(ir_index, ir_first_value, ir_last_value,
+                                                  ir_loop_block, ir_loop_before, ir_loop_after);
 
         ir_builder->pushBlock(ir_for->loopBlock());
         (*this)(ast_for.body);
@@ -396,7 +399,16 @@ class StatementLoweringVisitor {
             logger->error("continue is outside of a loop", ast_continue);
         }
 
-        return ir_builder->create<ir::JumpBranch>(ir_builder->loop_before_label_stack.top());
+        auto ir_before_label = ir_builder->loop_before_label_stack.top();
+        if (auto ir_for =
+                cast<ir::For>(ir_before_label->instruction_with_index_list.front().instruction)) {
+            auto ir_i_and_1 = ir_builder->callBinaryOperator(ir_for->index(), "+",
+                                                             {ir_builder->getIndexConstant(1)});
+            ir_builder->create<ir::WriteVariableLiked>(ir_i_and_1, ir_for->index());
+            return ir_builder->create<ir::JumpBranch>(ir_builder->loop_before_label_stack.top());
+        } else {
+            return ir_builder->create<ir::JumpBranch>(ir_builder->loop_before_label_stack.top());
+        }
     }
 
     void createStructConstructor(std::shared_ptr<ir::StructType> ir_struct_type) {

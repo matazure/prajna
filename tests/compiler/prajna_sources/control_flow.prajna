@@ -30,19 +30,44 @@ func testWhile(size: i64)->i64{
 }
 
 func testFor(){
-    var first = 0;
-    var last = 100;
-    var tmp = 0;
+    {
+        var first = 0;
+        var last = 100;
+        var tmp = 0;
+        // for获取的是first和last值, 获取后不会再被改变
+        for i in first to last{
+            tmp = tmp + i;
+            // 不影响循环
+            first = 100;
+            last = 0;
 
-    for i in first to last{
-        tmp = tmp + i;
+            // i的改变会影响循环, 后面看下如何修复
+            // i = i + 1;
+        }
 
-        // 不影响循环
-        // first = 100;
-        // last = 0;
+        testing::Assert(tmp == 4950);
     }
-
-    testing::Assert(tmp == 4950);
+    {
+        var j =  0;
+        for i in 0 to 10 {
+            if (i == 2){
+                break;
+            }
+            j  = j + 1;
+        }
+        testing::Assert(j == 2);
+    }
+    {
+        var i =  0;
+        var j = 0;
+        for i in 0 to 10 {
+            if (i == 2){
+                 continue;
+            }
+            j = j + 1;
+        }
+        testing::Assert(j == 9);
+    }
 }
 
 func testBreak()->i64{
