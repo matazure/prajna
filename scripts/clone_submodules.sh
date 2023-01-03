@@ -1,10 +1,13 @@
 #! /bin/bash
 set -e
 
+
+# 下载子模块
 git submodule init .
 git submodule update --depth=1
-cd third_party/boost
 
+# 下载boost的子模块
+cd third_party/boost
 git submodule init libs/spirit
 git submodule init libs/algorithm
 git submodule init libs/range
