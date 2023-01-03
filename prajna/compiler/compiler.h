@@ -3,7 +3,7 @@
 #include <memory>
 #include <string>
 
-#include "prajna/jit/execution_engine.h"
+#include "prajna/compiler/print_callback.h"
 
 namespace prajna {
 
@@ -15,7 +15,9 @@ namespace ir {
 class Module;
 }
 
-inline namespace compiler {
+namespace jit {
+class ExecutionEngine;
+}
 
 std::shared_ptr<lowering::SymbolTable> createPrimitiveTypes();
 
@@ -56,5 +58,4 @@ class Compiler {
     size_t compile_error_count = 0;
 };
 
-}  // namespace compiler
 }  // namespace prajna

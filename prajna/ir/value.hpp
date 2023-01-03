@@ -9,8 +9,6 @@
 #include <unordered_set>
 #include <vector>
 
-#include "boost/multiprecision/cpp_bin_float.hpp"
-#include "boost/multiprecision/cpp_int.hpp"
 #include "boost/noncopyable.hpp"
 #include "prajna/ast/ast.hpp"
 #include "prajna/helper.hpp"

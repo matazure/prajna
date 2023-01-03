@@ -19,3 +19,24 @@
 [submodule "third_party/cpp-terminal"]
 	path = third_party/cpp-terminal
 	url = https://github.com/matazure/cpp-terminal
+[submodule "third_party/xeus"]
+	path = xeus_prajna/third_party/xeus
+	url = https://github.com/jupyter-xeus/xeus
+[submodule "third_party/json"]
+	path = xeus_prajna/third_party/json
+	url = https://github.com/nlohmann/json.git
+[submodule "third_party/xtl"]
+	path = xeus_prajna/third_party/xtl
+	url = https://github.com/xtensor-stack/xtl.git
+[submodule "third_party/xeus-zmq"]
+	path = xeus_prajna/third_party/xeus-zmq
+	url = https://github.com/jupyter-xeus/xeus-zmq.git
+[submodule "third_party/cppzmq"]
+	path = xeus_prajna/third_party/cppzmq
+	url = https://github.com/zeromq/cppzmq.git
+[submodule "third_party/libzmq"]
+	path = xeus_prajna/third_party/libzmq
+	url = https://github.com/zeromq/libzmq.git
+[submodule "third_party/openssl"]
+	path = xeus_prajna/third_party/openssl
+	url = https://github.com/openssl/openssl

@@ -20,6 +20,7 @@
 #include "llvm/ExecutionEngine/Orc/ObjectLinkingLayer.h"
 #include "llvm/ExecutionEngine/SectionMemoryManager.h"
 #include "prajna/assert.hpp"
+#include "prajna/compiler/compiler.h"
 #include "prajna/ir/ir.hpp"
 #include "prajna/reference_count.hpp"
 
@@ -39,7 +40,7 @@ inline void checkCudaErrors(bool re) { PRAJNA_ASSERT(re == 0); }
 jmp_buf buf;
 
 void c_jmp_exit() { longjmp(buf, 1); }
-void c_print(char *char_string) { printf("%s", char_string); }
+void c_print(char *c_str) { print_callback(c_str); }
 void c_assert(bool t) {
     if (!t) {
         printf("%s\n", "Prajna runtime error");

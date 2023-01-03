@@ -1,6 +1,7 @@
 #include <exception>
 #include <functional>
 #include <iostream>
+#include <list>
 #include <stdexcept>
 #include <string>
 #include <vector>

@@ -6,8 +6,6 @@
 
 #include "boost/fusion/include/adapt_struct.hpp"
 #include "boost/fusion/include/io.hpp"
-#include "boost/multiprecision/cpp_bin_float.hpp"
-#include "boost/multiprecision/cpp_int.hpp"
 #include "boost/optional.hpp"
 // #include "boost/tuple/tuple.hpp" // 感觉匹配属性的时候存在很多问题, 不推荐使用了
 #include "boost/variant/recursive_variant.hpp"
@@ -87,7 +85,7 @@ struct IntLiteral : SourceLocation {
     int64_t value;
 
     // TODO 后期再做处理, 我们先不处理
-    boost::multiprecision::cpp_int mp_int_value;
+    // boost::multiprecision::cpp_int mp_int_value;
 };
 
 struct IntLiteralPostfix : SourceLocation {

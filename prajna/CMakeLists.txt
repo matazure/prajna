@@ -1,14 +1,14 @@
 
 add_library(prajna_config_target INTERFACE)
-target_include_directories(prajna_config_target
-    INTERFACE ${PROJECT_SOURCE_DIR}
+target_include_directories(prajna_config_target INTERFACE
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 
 target_link_libraries(prajna_config_target
     INTERFACE Boost::variant
     INTERFACE Boost::optional
     INTERFACE Boost::fusion
-    INTERFACE Boost::multiprecision
     INTERFACE Boost::algorithm
     INTERFACE fmt::fmt
 )
@@ -17,7 +17,11 @@ if (PRAJNA_WITH_GPU)
 target_compile_definitions(prajna_config_target INTERFACE PRAJNA_WITH_GPU)
 endif()
 
-target_compile_options(prajna_config_target INTERFACE -Werror -Wno-deprecated-declarations)
+target_compile_options(prajna_config_target
+    INTERFACE -Wno-unused-parameter
+    INTERFACE -Wno-deprecated-declarations
+    # INTERFACE -Werror
+)
 
 # 需要禁止一些函数才能很好工作, mac下不支持detect-leaks
 # 对于内存泄露来说, valgrind可能更加友好一点

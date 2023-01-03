@@ -7,6 +7,7 @@
 #include "fmt/format.h"
 #include "prajna/assert.hpp"
 #include "prajna/ast/ast.hpp"
+#include "prajna/compiler/print_callback.h"
 #include "prajna/exception.hpp"
 #include "prajna/rich_bash.hpp"
 
@@ -72,12 +73,14 @@ class Logger {
     void log(std::string message, ast::SourcePosition first_position,
              ast::SourcePosition last_position, std::string log_level,
              std::string locator_ascii_color, bool throw_error) {
+        std::string what_message;
         if (first_position.file.empty()) {
-            fmt::print("{}:{}: {}: {}\n", first_position.line, first_position.column, log_level,
-                       message);
+            what_message = fmt::format("{}:{}: {}: {}\n", first_position.line,
+                                       first_position.column, log_level, message);
         } else {
-            fmt::print("{}:{}:{}: {}: {}\n", first_position.file, first_position.line,
-                       first_position.column, log_level, message);
+            what_message =
+                fmt::format("{}:{}:{}: {}: {}\n", first_position.file, first_position.line,
+                            first_position.column, log_level, message);
         }
 
         if (last_position.column - 1 > _code_lines[last_position.line - 1].size()) {
@@ -96,8 +99,8 @@ class Logger {
             code_region.append("\n");
         }
 
-        // fmt::print(code_region); // has bug
-        std::cout << code_region;
+        print_callback(what_message.c_str());
+        print_callback(code_region.c_str());
 
         if (throw_error) {
             throw CompileError();

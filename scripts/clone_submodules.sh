@@ -5,7 +5,6 @@ git submodule init .
 git submodule update --depth=1
 cd third_party/boost
 
-# 直接依赖的库
 git submodule init libs/spirit
 git submodule init libs/algorithm
 git submodule init libs/range
@@ -13,9 +12,7 @@ git submodule init libs/variant
 git submodule init libs/optional
 git submodule init libs/fusion
 git submodule init libs/spirit
-# git submodule init libs/property_tree
 git submodule init libs/multiprecision
-# 间接依赖的库
 git submodule init libs/describe
 git submodule init libs/function_types
 git submodule init tools/cmake

@@ -3,7 +3,6 @@ target_link_libraries(prajna_lexer
     PUBLIC prajna_config_target
     PUBLIC prajna_ast
     PUBLIC Boost::spirit
-    PUBLIC Boost::multiprecision
 )
 
 if (PRAJNA_SPIRIT_DEBUG)

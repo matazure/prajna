@@ -16,8 +16,6 @@
 
 namespace prajna {
 
-inline namespace compiler {
-
 namespace fs = std::filesystem;
 
 namespace {
@@ -140,5 +138,4 @@ void Compiler::compileFile(std::string prajna_source_dir, std::string prajna_sou
     this->compileCode(code, current_symbol_table, prajna_source_full_path, false);
 }
 
-}  // namespace compiler
 }  // namespace prajna

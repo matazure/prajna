@@ -1,0 +1,10 @@
+
+{
+    "display_name": "Prajna",
+    "argv": [
+        "@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_BINDIR@/xeus_prajna",
+        "-f",
+        "{connection_file}"
+    ],
+    "language": "prajna"
+}

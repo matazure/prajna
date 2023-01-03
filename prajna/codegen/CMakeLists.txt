@@ -4,7 +4,7 @@ add_library(prajna_codegen
 
 target_link_libraries(prajna_codegen
     PUBLIC prajna_ir
-    PUBLIC llvm_include_dir
+    PRIVATE llvm_include_dir
     PRIVATE LLVMExecutionEngine
     PRIVATE LLVMCodeGen
     PRIVATE LLVMAnalysis

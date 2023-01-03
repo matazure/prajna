@@ -4,7 +4,7 @@ add_library(prajna_jit
 
 target_link_libraries(prajna_jit
     PUBLIC prajna_config_target
-    PUBLIC llvm_include_dir
+    PRIVATE llvm_include_dir
     PRIVATE LLVMExecutionEngine
     PRIVATE LLVMIRReader
     PRIVATE LLVMJITLink
