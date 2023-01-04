@@ -1,7 +1,6 @@
 #pragma once
 
 #include <filesystem>
-#include <fstream>
 
 #include "prajna/compiler/compiler.h"
 #include "xeus/xinterpreter.hpp"
@@ -12,7 +11,7 @@ namespace xeus_prajna {
 class PrajnaXeusInterpreter : public xeus::xinterpreter {
    public:
     PrajnaXeusInterpreter() {
-        register_interpreter(this);
+        xeus::register_interpreter(this);
         compiler = prajna::Compiler::create();
         compiler->compileBuiltinSourceFiles("builtin_sources");
     }
@@ -25,18 +24,21 @@ class PrajnaXeusInterpreter : public xeus::xinterpreter {
     nl::json execute_request_impl(int execution_counter, const std::string& code, bool silent,
                                   bool store_history, nl::json user_expressions,
                                   bool allow_stdin) override {
-        std::cout << "hit0\n";
-        std::cout.flush();
+        prajna::print_callback = [=, compiler = compiler](const char* c_str) {
+            nl::json pub_data;
+            // pub_data["text/plain"] = std::string(c_str);
+            // publish_execution_result(execution_counter, pub_data, nl::json::object());
+        };
+
+        auto code_line = code;
+        if (code_line.size() >= 1 and not(code_line.back() == ';' or code_line.back() == '}')) {
+            code_line.push_back(';');
+        }
+        code_line.push_back('\n');
+        compiler->compileCommandLine(code_line);
 
         auto slider = new xw::slider<double>;
-        slider->value = 10;
-        // slider->display();
-
-        std::cout << "hit1\n";
-        std::cout.flush();
-
-        // auto mime_bundle = mime_bundle_repr(*slider);
-        // this->display_data(mime_bundle, nl::json::object(), nl::json::object());
+        slider->display();
 
         nl::json result;
         result["status"] = "ok";
@@ -92,7 +94,6 @@ class PrajnaXeusInterpreter : public xeus::xinterpreter {
 
    private:
     std::shared_ptr<prajna::Compiler> compiler;
-    xw::slider<double> slider;
 };
 
 }  // namespace xeus_prajna

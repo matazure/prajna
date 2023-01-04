@@ -1,5 +1,6 @@
 set(OPENSSL_SOURCE_DIR  ${CMAKE_CURRENT_SOURCE_DIR}/third_party/openssl) # default path by CMake
 
+include(ExternalProject)
 # 如果在MacOSX上编译失败, 可设置环境变量export SDKROOT="$(xcrun --sdk macosx --show-sdk-path)", 本质只是用
 # cmake来执行config make的过程
 ExternalProject_Add(
@@ -27,3 +28,4 @@ set_target_properties(OpenSSL::Crypto PROPERTIES
   INTERFACE_INCLUDE_DIRECTORIES ${source_dir}/include
 )
 
+find_package(OpenSSL REQUIRED)
