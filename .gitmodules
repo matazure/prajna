@@ -40,3 +40,9 @@
 [submodule "third_party/openssl"]
 	path = xeus_prajna/third_party/openssl
 	url = https://github.com/openssl/openssl
+[submodule "xeus_prajna/third_party/xwidgets"]
+	path = xeus_prajna/third_party/xwidgets
+	url = https://github.com/jupyter-xeus/xwidgets.git
+[submodule "xeus_prajna/third_party/xproperty"]
+	path = xeus_prajna/third_party/xproperty
+	url = https://github.com/jupyter-xeus/xproperty.git

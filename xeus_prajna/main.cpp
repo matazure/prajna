@@ -6,8 +6,6 @@
 #include "xeus/xkernel.hpp"
 #include "xeus/xkernel_configuration.hpp"
 
-// std::function<void(char*)> prajna::compiler::print_callback = [](char*) { PRAJNA_UNIMPLEMENT; };
-
 int main(int argc, char* argv[]) {
     auto uq_xeus_prajna_interpreter = std::make_unique<xeus_prajna::PrajnaXeusInterpreter>();
     // Registering SIGSEGV handler
